@@ -1,13 +1,9 @@
 # netflix spinnaker templates
 
 Spinnaker is a centrally run product at Netflix, which we deploy continuously
-as development happens. These are templates that closely mimic the ones our team
-uses to deploy the Spinnaker services. Our clouddriver deployment pipelines are 
+as development happens. These are templates that similar to the ones our team
+uses to deploy Spinnaker itself. Our clouddriver deployment pipelines are 
 different enough from the other services that it is not represented here.
-
-Internally, we manage our own Redis instances rather than use ElastiCache. Since
-this is an implementation detail of our deployment which depends on Netflix-only
-infrastructure features, so we're not including these pipelines.
 
 You'll find 4 different templates:
 
@@ -26,3 +22,6 @@ The end-result pipelines that are created from these templates look like so:
 4b. Promote to Failover (this is part of the Env Root template, but is not
     currently present in these examples)
 ```
+
+While these templates work well for us, your milage may vary depending on your
+usage of Spinnaker itself.
