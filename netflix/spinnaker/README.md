@@ -1,5 +1,9 @@
 # netflix spinnaker templates
 
+**IMPORTANT: These templates have been scrubbed of Netflix-specific defaults.
+If you try to use them - they won't work. Look in the templates for areas where
+`omitted` has been flagged to see what would need to be updated for your use.**
+
 Spinnaker is a centrally run product at Netflix, which we deploy continuously
 as development happens. These are templates that similar to the ones our team
 uses to deploy Spinnaker itself. Our clouddriver deployment pipelines are 
