@@ -1,0 +1,29 @@
+schema: '1'
+id: deployFromCluster
+source: https://raw.githubusercontent.com/robzienert/pipeline-templates/master/netflix/spinnaker/deployToEnvRoot.yml
+metadata:
+  name: Deploy to Target Env from Cluster
+  description: |-
+    Defines a deploy pipeline to a target account, sourcing the deployment
+    artifact from a find image from cluster stage.
+  owner: example@example.com
+protect: false
+configuration: {}
+variables:
+- name: sourceCluster
+  description: The cluster to find the deployment image from
+- name: sourceCredentials
+  description: The account credentials name that the source cluster is in
+stages:
+- id: findImages
+  type: findImage
+  inject:
+    first: true
+  name: Find Image from Cluster
+  config:
+    cloudProvider: aws
+    cloudProviderType: aws
+    cluster: "{{ sourceCluster }}"
+    credentials: "{{ sourceCredentials }}"
+    onlyEnabled: true
+    selectionStrategy: NEWEST

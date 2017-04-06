@@ -1,0 +1,54 @@
+schema: '1'
+id: bakeAndTagImages
+metadata:
+  name: Bake + Tag
+  description: |-
+    Defines a bake & tag pipeline that is used as the ingress pipeline for all
+    application deployments.
+  owner: example@example.com
+protect: false
+configuration:
+  concurrentExecutions:
+    parallel: true
+    limitConcurrent: true
+  triggers:
+  - type: jenkins
+    job: package-{{ application }}
+    master: spinnaker
+    propertyFile: ''
+    enabled: true
+  parameters: []
+  notifications: []
+variables:
+- name: bakeRegions
+  type: list
+stages:
+- id: bake
+  type: bake
+  name: Bake
+  config:
+    baseLabel: release
+    baseOs: trusty
+    cloudProviderType: aws
+    enhancedNetworking: false
+    extendedAttributes: {}
+    package: "{{ application }}"
+    regions: |
+      {% for region in bakeRegions %}
+      - {{ region }}
+      {% endfor %}
+    showAdvancedOptions: false
+    storeType: ebs
+    user: "{{ application }}"
+    vmType: hvm
+- id: tagImages
+  type: upsertImageTags
+  dependsOn:
+  - bake
+  name: Tag Image
+  config:
+    cloudProvider: aws
+    cloudProviderType: aws
+    tags:
+      stack: test
+

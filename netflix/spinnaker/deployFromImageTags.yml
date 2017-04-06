@@ -1,0 +1,28 @@
+schema: '1'
+id: deployFromImageTags
+source: https://raw.githubusercontent.com/robzienert/pipeline-templates/master/netflix/spinnaker/deployToEnvRoot.yml
+metadata:
+  name: Deploy to Target Env from Image Tags
+  description: |-
+    Defines a deploy pipeline to a target account, sourcing the deployment
+    artifact from an find image from tags stage.
+  owner: example@example.com
+protect: false
+configuration: {}
+variables:
+- name: findImageRegion
+  description: The region to find the AMI in
+stages:
+- id: findImages
+  type: findImageFromTags
+  inject:
+    first: true
+  name: Find Image from Tags
+  config:
+    cloudProvider: aws
+    cloudProviderType: aws
+    packageName: "{{ application }}"
+    regions:
+    - "{{ findImageRegion }}"
+    tags:
+      stack: test

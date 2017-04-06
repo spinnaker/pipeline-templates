@@ -1,0 +1,133 @@
+schema: '1'
+id: deployToEnvRoot
+metadata:
+  name: Deploy to Target Env Root Template
+  description: |-
+    Defines a deploy pipeline that pushes to the target account, gated by a 
+    manual judgement. This template should not be used directly.
+  owner: example@example.com
+protect: false
+configuration:
+  concurrentExecutions:
+    parallel: true
+    limitConcurrent: true
+  triggers: []
+  parameters: []
+  notifications: []
+variables:
+- name: targetCredentials
+  description: The account credentials where the application will be deployed to
+  defaultValue: mgmt
+- name: clusters
+  description: A list of cluster-specific configuration options
+  type: object
+  example: |
+    - name: orca-test
+      region: us-west-2
+      availabilityZones: [] # Omitted from example
+      capacity: 1
+      keyPair: example-keypair
+      loadBalancers:
+      - orca-test
+      securityGroups: [] # Omitted from example
+      strategy: highlander
+      instanceType: m3.xlarge
+- name: deployToFailover
+  description: Whether or not to deploy into the failover region.
+  defaultValue: false
+stages:
+# IMPORTANT: Templates extending this root template must inject a stage before
+# manual judgement to ensure the images are found (either from tags, or cluster)
+- id: manualJudgment
+  type: manualJudgment
+  name: Approve {{ targetCredentials }}
+  config:
+    failPipeline: true
+    instructions: Do you approve of this pipeline, which will push {{ application }} to {{ targetCredentials }}?
+    judgmentInputs: []
+    notifications:
+    - address: spinnaker
+      level: stage
+      type: slack
+      when:
+      - manualJudgment
+    propagateAuthenticationContext: true
+    sendNotifications: true
+- id: deploy
+  type: deploy
+  dependsOn:
+  - manualJudgment
+  name: Deploy
+  config:
+    clusters: |
+      {% for c in clusters %}
+      - {% module deployCluster 
+        account=targetCredentials,
+        cluster=c.name,
+        region=c.region,
+        availabilityZones=c.availabilityZones,
+        capacity=c.capacity,
+        keyPair=c.keyPair,
+        loadBalancers=c.loadBalancers,
+        securityGroups=c.securityGroups,
+        strategy=c.strategy,
+        instanceType=c.instanceType %}
+      {% endfor %}
+
+modules:
+- id: deployCluster
+  variables:
+  - name: account
+  - name: cluster
+  - name: region
+  - name: availabilityZones
+    type: list
+  - name: capacity
+  - name: keyPair
+  - name: loadBalancers
+    type: list
+  - name: securityGroups
+    type: list
+  - name: strategy
+  - name: instanceType
+  definition:
+    account: "{{ account }}"
+    application: "{{ application }}"
+    availabilityZones: |
+      {{ region }}:
+      {% for az in availabilityZones %}
+      - {{ az }}
+      {% endfor %}
+    capacity:
+      desired: "{{ capacity }}"
+      max: "{{ capacity }}"
+      min: "{{ capacity }}"
+    cloudProvider: aws
+    cooldown: 300
+    ebsOptimized: false
+    freeFormDetails: "{{ cluster|frigga('detail') }}"
+    healthCheckGracePeriod: 0
+    healthCheckType: EC2
+    iamRole: "{{ application }}ExampleRole" # Omitted from example
+    instanceMonitoring: true
+    instanceType: "{{ instanceType }}"
+    keyPair: "{{ keyPair }}"
+    loadBalancers: |
+      {% for lb in loadBalancers %}
+      - {{ lb }}
+      {% endfor %}
+    maxRemainingAsgs: "{% if application == 'orca' %}3{% else %}1{% endif %}"
+    provider: aws
+    securityGroups: |
+      {% for sg in securityGroups %}
+      - {{ sg }}
+      {% endfor %}
+    stack: "{{ cluster|frigga('stack') }}"
+    strategy: "{{ strategy }}"
+    subnetType: example # Omitted from example
+    suspendedProcesses: []
+    tags: {}
+    targetHealthyDeployPercentage: 100
+    terminationPolicies:
+    - Default
+    useSourceCapacity: false
