@@ -1,0 +1,17 @@
+schema: "1"        
+id: wait-template
+metadata:
+  name: Simple wait template
+  description: Extensible root template
+  owner: sample@sample.com
+  scopes:
+    - global
+variables:         
+- name: waitTime
+  description: The time a wait stage should pause
+  type: int
+stages:
+- id: wait1
+  type: wait
+  config:
+    waitTime: "{{ waitTime }}"  # Variables can be used anywhere

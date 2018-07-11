@@ -1,0 +1,20 @@
+schema: "1"        
+id: manual-judge-deploy-template
+source: spinnaker://template-deploy
+metadata:
+  name: deploy with manual judgment
+  description: deploy to an account with a manual judgment before hand
+  owner: sample@sample.com
+  scopes:
+    - global
+variables:         
+- name: judgeMessage
+  description: User message for judgment
+  defaultValue: Please judge me. Do you want to continue?
+stages:
+- id: judgy
+  type: manualJudgment
+  config:
+    instructions: "{{ judgeMessage }}"
+  inject: 
+    first: true
